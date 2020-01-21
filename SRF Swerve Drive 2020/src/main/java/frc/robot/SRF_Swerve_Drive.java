@@ -1,35 +1,24 @@
 package frc.robot;
 
-import com.kauailabs.navx.frc.AHRS;
-
-import edu.wpi.first.wpilibj.Joystick;
-
 class SRF_Swerve_Drive {
-    Joystick xBox;
-    AHRS navx;
-    double wheelBase,trackWidth,radius, gyroValue;
-    /*
-    wheelbase[]: Wheel number
-    wheelbase[][]: 0 - Speed, 1 - Angle
-    */
-    double[][] wheelValues = new double[4][2];
     
-    public SRF_Swerve_Drive(Joystick j, double w, double t, double r, AHRS gyro) {
-        xBox = j;
+    double wheelBase, trackWidth, radius, gyroValue;
+    /*T:Top B:Bottom
+      L:Left R:Right
+      S: Speed R: Rotation*/
+    double[] wheelSpeed = new double[4];
+    double[] wheelAngle = new double[4];
+
+    /*wheelbase[]: Wheel number
+      wheelbase[][]: 0 - Speed, 1 - Angle*/
+
+    public SRF_Swerve_Drive(double w, double t, double r) {
         wheelBase = w;
         trackWidth = t;
         radius = r;
-        navx = gyro;
     }
 
-    public SRF_Swerve_Drive(double w, double t, double r, AHRS gyro) {
-        wheelBase = w;
-        trackWidth = t;
-        radius = r;
-        navx = gyro;
-    }
-
-    public double[] convertToFieldPosition(double Y, double X, double gyroAngle){
+	private double[] convertToFieldPosition(double Y, double X, double gyroAngle){
         double newY, newX, temp;
 
         temp = Y*Math.cos(gyroAngle) + X*Math.sin(gyroAngle);
@@ -39,87 +28,79 @@ class SRF_Swerve_Drive {
         return new double[] {newX,newY};
     }
 
-    public double[][] calculate(boolean orientToField){
-        double X, Y, W, A, B, C, D;
-        double greatestValue = -1;
-        X = xBox.getRawAxis(0);
-        Y = xBox.getRawAxis(1);
-        W = xBox.getRawAxis(2);
-        
-        if(orientToField) {
-            double[] newCoordinates = convertToFieldPosition(X,Y,(navx.getAngle()/180)*Math.PI);
-            X = newCoordinates[0];
-            Y = newCoordinates[1];
-        }
-
-        A = X - W*(wheelBase/radius);
-        B = X + W*(wheelBase/radius);
-        C = Y - W*(trackWidth/radius);
-        D = Y + W*(trackWidth/radius);
-
-        wheelValues[0][0] = Math.sqrt(Math.pow(B,2) + Math.pow(C,2));
-        wheelValues[1][0] = Math.sqrt(Math.pow(B,2) + Math.pow(D,2));
-        wheelValues[2][0] = Math.sqrt(Math.pow(A,2) + Math.pow(D,2));
-        wheelValues[3][0] = Math.sqrt(Math.pow(A,2) + Math.pow(C,2));
-
-        for(int wheel = 0; wheel < 4; wheel++) {
-            if(wheelValues[wheel][0] > 1 && wheelValues[wheel][0] > greatestValue) {
-                greatestValue = wheelValues[wheel][0];
-            }
-        }
-
-        if(greatestValue > -1) {
-            for(int wheel = 0; wheel < 4; wheel++) {
-                wheelValues[wheel][0] = wheelValues[wheel][0]/greatestValue;
-            }
-        }
-
-        wheelValues[0][1] = Math.atan2(B,C)*(180/Math.PI);
-        wheelValues[1][1] = Math.atan2(B,D)*(180/Math.PI);
-        wheelValues[2][1] = Math.atan2(A,D)*(180/Math.PI);
-        wheelValues[3][1] = Math.atan2(A,C)*(180/Math.PI);
-
-        return wheelValues;
+    public void set(double X, double Y, double W) {
+        calculate(X,Y,W);
     }
 
-    public double[][] calculate(boolean orientToField, double X, double Y, double W){
+    public void set(double X, double Y, double W, double gyroAngle) {
+        double[] newCoordinates = convertToFieldPosition(X,Y,(gyroAngle/180)*Math.PI);
+        X = newCoordinates[0];
+        Y = newCoordinates[1];
+        calculate(X,Y,W);
+    }
+
+    private void calculate(double X, double Y, double W){
         double A, B, C, D;
         double greatestValue = -1;
         
-        if(orientToField) {
-            double[] newCoordinates = convertToFieldPosition(X,Y,(navx.getAngle()/180)*Math.PI);
-            X = newCoordinates[0];
-            Y = newCoordinates[1];
-        }
-
         A = X - W*(wheelBase/radius);
         B = X + W*(wheelBase/radius);
         C = Y - W*(trackWidth/radius);
         D = Y + W*(trackWidth/radius);
 
-        wheelValues[0][0] = Math.sqrt(Math.pow(B,2) + Math.pow(C,2));
-        wheelValues[1][0] = Math.sqrt(Math.pow(B,2) + Math.pow(D,2));
-        wheelValues[2][0] = Math.sqrt(Math.pow(A,2) + Math.pow(D,2));
-        wheelValues[3][0] = Math.sqrt(Math.pow(A,2) + Math.pow(C,2));
+        wheelSpeed[0] = Math.sqrt(Math.pow(B,2) + Math.pow(C,2));
+        wheelSpeed[1] = Math.sqrt(Math.pow(B,2) + Math.pow(D,2));
+        wheelSpeed[2] = Math.sqrt(Math.pow(A,2) + Math.pow(D,2));
+        wheelSpeed[3] = Math.sqrt(Math.pow(A,2) + Math.pow(C,2));
 
         for(int wheel = 0; wheel < 4; wheel++) {
-            if(wheelValues[wheel][0] > 1 && wheelValues[wheel][0] > greatestValue) {
-                greatestValue = wheelValues[wheel][0];
+            if(wheelSpeed[0] > 1 && wheelSpeed[0] > greatestValue) {
+                greatestValue = wheelSpeed[0];
             }
         }
 
         if(greatestValue > -1) {
             for(int wheel = 0; wheel < 4; wheel++) {
-                wheelValues[wheel][0] = wheelValues[wheel][0]/greatestValue;
+                wheelSpeed[0] = wheelSpeed[0]/greatestValue;
             }
         }
 
-        wheelValues[0][1] = Math.atan2(B,C)*(180/Math.PI);
-        wheelValues[1][1] = Math.atan2(B,D)*(180/Math.PI);
-        wheelValues[2][1] = Math.atan2(A,D)*(180/Math.PI);
-        wheelValues[3][1] = Math.atan2(A,C)*(180/Math.PI);
+        wheelAngle[0] = Math.atan2(B,C)*(180/Math.PI);
+        wheelAngle[1] = Math.atan2(B,D)*(180/Math.PI);
+        wheelAngle[2] = Math.atan2(A,D)*(180/Math.PI);
+        wheelAngle[3] = Math.atan2(A,C)*(180/Math.PI);
+    }
 
-        return wheelValues;
+    public double getTopLeftSpeed(){
+        return wheelSpeed[1];
+    }
+
+    public double getTopRightSpeed(){
+        return wheelSpeed[0];
+    }
+
+    public double getBottomLeftSpeed(){
+        return wheelSpeed[2];
+    }
+
+    public double getBottomRightSpeed(){
+        return wheelSpeed[3];
+    }
+
+    public double getTopLeftAngle(){
+        return wheelAngle[1];
+    }
+
+    public double getTopRightAngle(){
+        return wheelAngle[0];
+    }
+
+    public double getBottomLeftAngle(){
+        return wheelAngle[2];
+    }
+
+    public double getBottomRightAngle(){
+        return wheelAngle[3];
     }
 }
 
