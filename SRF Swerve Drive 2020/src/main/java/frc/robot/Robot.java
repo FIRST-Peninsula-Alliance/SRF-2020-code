@@ -34,7 +34,6 @@ public class Robot extends TimedRobot {
    * for any initialization code.
    */
   
-  
   Joystick controller = new Joystick(0);
   TalonSRX rotationController;
   CANSparkMax wheel;
@@ -45,12 +44,14 @@ public class Robot extends TimedRobot {
 
   boolean letUpOne;
 
+  boolean testRotationController = true;
+
   @Override
   public void robotInit() {
     navx = new AHRS();
     wheel = new CANSparkMax(2, MotorType.kBrushless);
     rotationController = new TalonSRX(1);
-    driveBase = new SRF_Swerve_Drive(controller, 30.0, 24.0, 38.42, navx);   
+    driveBase = new SRF_Swerve_Drive(30.0, 24.0, 38.42);   
     
     rotationController.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
     rotationController.config_kP(0, kP);
@@ -76,20 +77,15 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    double[][] values = driveBase.calculate(true);
+    driveBase.set(controller.getRawAxis(0), controller.getRawAxis(1), controller.getRawAxis(2), navx.getAngle());
 
-    /*
+    if(Math.abs(driveBase.getTopRightSpeed()) > .05 && !testRotationController)
+      wheel.set(driveBase.getTopRightSpeed());
+    
+    //about 512 counts/half rotation of wheel Gear
+    if(Math.abs(controller.getRawAxis(0)) > .05 || Math.abs(controller.getRawAxis(1)) > .05 || Math.abs(controller.getRawAxis(2)) > .05)
+      rotationController.set(ControlMode.Position, Math.round((driveBase.getTopRightAngle()/360)*1040));
 
-    if(Math.abs(controller.getRawAxis(3)) > .1)
-      wheel.set(controller.getRawAxis(3));
-    else
-      wheel.set(0);
-    */
-    
-    /*System.out.println(values[1][1]);
-    System.out.println(values[2][1]);
-    System.out.println(values[3][1]);*/
-    
     if(controller.getRawButton(1) && letUpOne) {
       navx.setAngleAdjustment(90);
       letUpOne = false;
@@ -98,20 +94,10 @@ public class Robot extends TimedRobot {
       letUpOne = true;
     }
 
-    
-    
-    //wheel.set(values[0][0]);
-
-    //about 512 counts/half rotation of wheel Gear
-    if(Math.abs(controller.getRawAxis(0)) > .2 || Math.abs(controller.getRawAxis(1)) > .2 || Math.abs(controller.getRawAxis(2)) > .2)
-      rotationController.set(ControlMode.Position, Math.round((values[0][1]/360)*1040));
-    else
-      rotationController.set(ControlMode.Position, 0);
-    
-    SmartDashboard.putNumber("Tire Speed",values[0][0]);
-    SmartDashboard.putNumber("Angle in Degrees",values[0][1]);
-    SmartDashboard.putNumber("PID Target", Math.round((values[0][1] / 360) * 1040));
-    SmartDashboard.putNumber("Sensor Value", rotationController.getSelectedSensorPosition());
+    SmartDashboard.putNumber("Tire Speed", driveBase.getTopRightSpeed());
+    SmartDashboard.putNumber("Angle in Degrees",driveBase.getTopRightAngle());
+    SmartDashboard.putNumber("PID Target", Math.round((driveBase.getTopRightAngle() / 360) * 1040));
+    SmartDashboard.putNumber("Rotation Encoder Value", rotationController.getSelectedSensorPosition());
     SmartDashboard.putNumber("Gyro", navx.getAngle());
   }
 
