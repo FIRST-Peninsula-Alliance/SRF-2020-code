@@ -3,14 +3,9 @@ package frc.robot;
 class SRF_Swerve_Drive {
     
     double wheelBase, trackWidth, radius, gyroValue;
-    /*T:Top B:Bottom
-      L:Left R:Right
-      S: Speed R: Rotation*/
+
     double[] wheelSpeed = new double[4];
     double[] wheelAngle = new double[4];
-
-    /*wheelbase[]: Wheel number
-      wheelbase[][]: 0 - Speed, 1 - Angle*/
 
     public SRF_Swerve_Drive(double w, double t, double r) {
         wheelBase = w;
@@ -18,6 +13,10 @@ class SRF_Swerve_Drive {
         radius = r;
     }
 
+    /*
+    Changes the X,Y, values inputed (Like from a controller joystick) so they are oriented 
+    to forward being the opposite end of the field from you as opposed to the front of the robot
+    */
 	private double[] convertToFieldPosition(double Y, double X, double gyroAngle){
         double newY, newX, temp;
 
@@ -28,10 +27,12 @@ class SRF_Swerve_Drive {
         return new double[] {newX,newY};
     }
 
+    //Sets and runs the calculate function (see below) with the appropriate X, Y, and Rotation
     public void set(double X, double Y, double W) {
         calculate(X,Y,W);
     }
 
+    //Does the same as above except changing the values to be field oriented
     public void set(double X, double Y, double W, double gyroAngle) {
         double[] newCoordinates = convertToFieldPosition(X,Y,(gyroAngle/180)*Math.PI);
         X = newCoordinates[0];
@@ -53,53 +54,58 @@ class SRF_Swerve_Drive {
         wheelSpeed[2] = Math.sqrt(Math.pow(A,2) + Math.pow(D,2));
         wheelSpeed[3] = Math.sqrt(Math.pow(A,2) + Math.pow(C,2));
 
+        /*
+        Finds the largest wheel speed greater then 1 and converts all speeds so they are proportional
+        to the largest being 1. It does this since the range of the motor is [-1,1].
+        Note: the values from the equation above for the wheel speed are only positive
+        */
         for(int wheel = 0; wheel < 4; wheel++) {
             if(wheelSpeed[0] > 1 && wheelSpeed[0] > greatestValue) {
                 greatestValue = wheelSpeed[0];
             }
         }
-
         if(greatestValue > -1) {
             for(int wheel = 0; wheel < 4; wheel++) {
                 wheelSpeed[0] = wheelSpeed[0]/greatestValue;
             }
         }
 
+        //gives angle of the wheels in degrees
         wheelAngle[0] = Math.atan2(B,C)*(180/Math.PI);
         wheelAngle[1] = Math.atan2(B,D)*(180/Math.PI);
         wheelAngle[2] = Math.atan2(A,D)*(180/Math.PI);
         wheelAngle[3] = Math.atan2(A,C)*(180/Math.PI);
     }
 
-    public double getTopLeftSpeed(){
+    public double getFrontLeftSpeed(){
         return wheelSpeed[1];
     }
 
-    public double getTopRightSpeed(){
+    public double getFrontRightSpeed(){
         return wheelSpeed[0];
     }
 
-    public double getBottomLeftSpeed(){
+    public double getRearLeftSpeed(){
         return wheelSpeed[2];
     }
 
-    public double getBottomRightSpeed(){
+    public double getRearRightSpeed(){
         return wheelSpeed[3];
     }
 
-    public double getTopLeftAngle(){
+    public double getFrontLeftAngle(){
         return wheelAngle[1];
     }
 
-    public double getTopRightAngle(){
+    public double getFrontRightAngle(){
         return wheelAngle[0];
     }
 
-    public double getBottomLeftAngle(){
+    public double getRearLeftAngle(){
         return wheelAngle[2];
     }
 
-    public double getBottomRightAngle(){
+    public double getRearRightAngle(){
         return wheelAngle[3];
     }
 }
