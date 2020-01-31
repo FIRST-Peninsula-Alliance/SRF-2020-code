@@ -50,6 +50,8 @@ public class Robot extends TimedRobot {
 
   boolean testRotationController = true;
 
+  Boolean letUpB = true;
+
   I2C wire = new I2C(Port.kOnboard, 0x0);
 
   @Override
@@ -57,17 +59,17 @@ public class Robot extends TimedRobot {
     navx = new AHRS();
 
     //Replace -1 with actual values
-    frontLeft = new CANSparkMax(1, MotorType.kBrushless);
-    frontRight = new CANSparkMax(1, MotorType.kBrushless);
-    rearLeft = new CANSparkMax(1, MotorType.kBrushless);
-    rearRight = new CANSparkMax(1, MotorType.kBrushless);
+    frontLeft = new CANSparkMax(2, MotorType.kBrushless);
+    frontRight = new CANSparkMax(8, MotorType.kBrushless);
+    rearLeft = new CANSparkMax(4, MotorType.kBrushless);
+    rearRight = new CANSparkMax(6, MotorType.kBrushless);
 
     frontLeftRot = new TalonSRX(1);
-    frontRightRot = new TalonSRX(1);
-    rearLeftRot = new TalonSRX(1);
-    rearRightRot = new TalonSRX(1);
+    frontRightRot = new TalonSRX(7);
+    rearLeftRot = new TalonSRX(3);
+    rearRightRot = new TalonSRX(5);
 
-    driveBase = new SRF_Swerve_Drive(30.0, 24.0, 38.42);
+    driveBase = new SRF_Swerve_Drive(25.0, 21.0, 32.65);
 
     frontLeftRot.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
     frontLeftRot.config_kP(0, kP);
@@ -104,6 +106,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopInit() {
+    
   }
 
   @Override
@@ -113,16 +116,30 @@ public class Robot extends TimedRobot {
 
     // about 512 counts/half rotation of wheel Gear
     if (Math.abs(controller.getRawAxis(0)) > .05 || Math.abs(controller.getRawAxis(1)) > .05  || Math.abs(controller.getRawAxis(2)) > .05) {
-      frontLeft.set(driveBase.getFrontLeftSpeed());
+      /*frontLeft.set(driveBase.getFrontLeftSpeed());
       frontRight.set(driveBase.getFrontRightSpeed());
       rearLeft.set(driveBase.getRearLeftSpeed());
-      rearRight.set(driveBase.getRearRightSpeed());
+      rearRight.set(driveBase.getRearRightSpeed());*/
 
       frontRightRot.set(ControlMode.Position, Math.round((driveBase.getFrontLeftAngle() / 360) * 1040));
       frontLeftRot.set(ControlMode.Position, Math.round((driveBase.getFrontRightAngle() / 360) * 1040));
       rearLeftRot.set(ControlMode.Position, Math.round((driveBase.getRearLeftAngle() / 360) * 1040));
       rearRightRot.set(ControlMode.Position, Math.round((driveBase.getRearRightAngle() / 360) * 1040));
+    } else {
+      /*frontLeft.set(0);
+      frontRight.set(0);
+      rearLeft.set(0);
+      rearRight.set(0);*/
     }
+
+    if(controller.getRawButton(1) && letUpB) {
+      navx.
+      letUpB = false;
+    }
+    if(!controller.getRawButton(1) && !letUpB) {
+      letUpB = true;
+    }
+
 
     SmartDashboard.putNumber("Front Left Speed", driveBase.getFrontLeftSpeed());
     SmartDashboard.putNumber("Front Right Speed", driveBase.getFrontRightSpeed());
