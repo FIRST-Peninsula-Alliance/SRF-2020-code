@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
@@ -40,13 +41,20 @@ public class Robot extends TimedRobot {
   TalonSRX frontLeftRot, frontRightRot, rearLeftRot, rearRightRot;
   CANSparkMax frontLeft, frontRight, rearLeft, rearRight;
 
+  SRF_Swerve_Module FLModule;
+  SRF_Swerve_Module FRModule;
+  SRF_Swerve_Module RLModule;
+  SRF_Swerve_Module RRModule;
   SRF_Swerve_Drive driveBase;
 
   AHRS navx;
   Block pixyBlock;
   PixyCam pixy = new PixyCam();
 
-  double kP = 12, kI = 0.065, kD = 0;
+  double kP = 16, kI = 0.00013, kD = 0;
+
+  //Joystick values for swerve drive
+  double x, y, w;
 
   boolean testRotationController = true;
 
@@ -58,7 +66,6 @@ public class Robot extends TimedRobot {
   public void robotInit() {
     navx = new AHRS();
 
-    //Replace -1 with actual values
     frontLeft = new CANSparkMax(2, MotorType.kBrushless);
     frontRight = new CANSparkMax(8, MotorType.kBrushless);
     rearLeft = new CANSparkMax(4, MotorType.kBrushless);
@@ -69,31 +76,19 @@ public class Robot extends TimedRobot {
     rearLeftRot = new TalonSRX(3);
     rearRightRot = new TalonSRX(5);
 
-    driveBase = new SRF_Swerve_Drive(25.0, 21.0, 32.65);
+    FLModule = new SRF_Swerve_Module(1, 2, kP, kI, kD);
+    FRModule = new SRF_Swerve_Module(7, 8, kP, kI, kD);
+    RLModule = new SRF_Swerve_Module(3, 4, kP, kI, kD);
+    RRModule = new SRF_Swerve_Module(5, 6, kP, kI, kD);
 
-    frontLeftRot.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
-    frontLeftRot.config_kP(0, kP);
-    frontLeftRot.config_kI(0, kI);
-    frontLeftRot.config_kD(0, kD);
-    frontLeftRot.setSelectedSensorPosition(0);
-
-    frontRightRot.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
-    frontRightRot.config_kP(0, kP);
-    frontRightRot.config_kI(0, kI);
-    frontRightRot.config_kD(0, kD);
-    frontRightRot.setSelectedSensorPosition(0);
-
-    rearLeftRot.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
-    rearLeftRot.config_kP(0, kP);
-    rearLeftRot.config_kI(0, kI);
-    rearLeftRot.config_kD(0, kD);
-    rearLeftRot.setSelectedSensorPosition(0);
-
-    rearRightRot.configSelectedFeedbackSensor(FeedbackDevice.Analog, 0, 0);
-    rearRightRot.config_kP(0, kP);
-    rearRightRot.config_kI(0, kI);
-    rearRightRot.config_kD(0, kD);
-    rearRightRot.setSelectedSensorPosition(0);
+    driveBase = new SRF_Swerve_Drive(FLModule, FRModule, RLModule, RRModule, 25.0, 21.0, 32.65);
+  }
+ 
+  public void disabledPeriodic(){
+    /*SmartDashboard.putNumber("Front Left Sensor", frontLeftRot.getSelectedSensorPosition());
+    SmartDashboard.putNumber("Front Right Sensor", frontRightRot.getSelectedSensorPosition());
+    SmartDashboard.putNumber("Rear Left Sensor", rearLeftRot.getSelectedSensorPosition());
+    SmartDashboard.putNumber("Rear Right Sensor", rearRightRot.getSelectedSensorPosition());*/
   }
 
   @Override
@@ -111,52 +106,44 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    
-    driveBase.set(controller.getRawAxis(0), controller.getRawAxis(1), controller.getRawAxis(2), navx.getAngle());
+    x = controller.getRawAxis(0);
+    y = controller.getRawAxis(1);
+    w = controller.getRawAxis(2);
 
-    // about 512 counts/half rotation of wheel Gear
-    if (Math.abs(controller.getRawAxis(0)) > .05 || Math.abs(controller.getRawAxis(1)) > .05  || Math.abs(controller.getRawAxis(2)) > .05) {
-      /*frontLeft.set(driveBase.getFrontLeftSpeed());
-      frontRight.set(driveBase.getFrontRightSpeed());
-      rearLeft.set(driveBase.getRearLeftSpeed());
-      rearRight.set(driveBase.getRearRightSpeed());*/
+    if(Math.abs(x) < .03)
+      x = 0.0;
+    if(Math.abs(y) < .03)
+      y = 0.0;
+    if(Math.abs(w) < .03)
+      w = 0.0;
 
-      frontRightRot.set(ControlMode.Position, Math.round((driveBase.getFrontLeftAngle() / 360) * 1040));
-      frontLeftRot.set(ControlMode.Position, Math.round((driveBase.getFrontRightAngle() / 360) * 1040));
-      rearLeftRot.set(ControlMode.Position, Math.round((driveBase.getRearLeftAngle() / 360) * 1040));
-      rearRightRot.set(ControlMode.Position, Math.round((driveBase.getRearRightAngle() / 360) * 1040));
+    //if(x != 0 || y != 0 || w != 0) {
+      driveBase.set(x, y*-1, w);
+      /*frontLeft.set(driveBase.getFrontLeftSpeed()/2);
+      frontRight.set(driveBase.getFrontRightSpeed()/2);
+      rearLeft.set(driveBase.getRearLeftSpeed()/2);
+      rearRight.set(driveBase.getRearRightSpeed()/2);
     } else {
-      /*frontLeft.set(0);
+      frontLeft.set(0);
       frontRight.set(0);
       rearLeft.set(0);
-      rearRight.set(0);*/
-    }
+      rearRight.set(0);
+    }*/
+
+    //1024 is the number of encoder counts per revolution of the wheel
+    /*frontRightRot.set(ControlMode.Position, Math.round((driveBase.getFrontRightAngle() / 360) * 1024));
+    frontLeftRot.set(ControlMode.Position, Math.round((driveBase.getFrontLeftAngle() / 360) * 1024));
+    rearLeftRot.set(ControlMode.Position, Math.round((driveBase.getRearLeftAngle() / 360) * 1024));
+    rearRightRot.set(ControlMode.Position, Math.round((driveBase.getRearRightAngle() / 360) * 1024));*/
 
     if(controller.getRawButton(1) && letUpB) {
-      navx.
       letUpB = false;
     }
     if(!controller.getRawButton(1) && !letUpB) {
       letUpB = true;
     }
 
-
-    SmartDashboard.putNumber("Front Left Speed", driveBase.getFrontLeftSpeed());
-    SmartDashboard.putNumber("Front Right Speed", driveBase.getFrontRightSpeed());
-    SmartDashboard.putNumber("Rear Left Speed", driveBase.getRearLeftSpeed());
-    SmartDashboard.putNumber("Rear Right Speed", driveBase.getRearRightSpeed());
-
-    //Angle of the wheels in Degrees
-    SmartDashboard.putNumber("Front Left Angle", driveBase.getFrontLeftAngle());
-    SmartDashboard.putNumber("Front Right Angle", driveBase.getFrontRightAngle());
-    SmartDashboard.putNumber("Rear Left Angle", driveBase.getRearLeftAngle());
-    SmartDashboard.putNumber("Rear Right Angle", driveBase.getRearRightAngle());
-
-    SmartDashboard.putNumber("Front Left PID Target", Math.round((driveBase.getFrontLeftAngle() / 360) * 1040));
-    SmartDashboard.putNumber("Front Right PID Target", Math.round((driveBase.getFrontRightAngle() / 360) * 1040));
-    SmartDashboard.putNumber("Rear Left PID Target", Math.round((driveBase.getRearLeftAngle() / 360) * 1040));
-    SmartDashboard.putNumber("Rear Right PID Target", Math.round((driveBase.getRearRightAngle() / 360) * 1040));
-
+    driveBase.displaySmartDashboard(true, true, true, true);
     SmartDashboard.putNumber("Gyro", navx.getAngle());
   }
 

@@ -1,13 +1,25 @@
 package frc.robot;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 class SRF_Swerve_Drive {
     
-    double wheelBase, trackWidth, radius, gyroValue;
+    private double wheelBase, trackWidth, radius;
 
-    double[] wheelSpeed = new double[4];
-    double[] wheelAngle = new double[4];
+    private double[] wheelSpeed = new double[4];
+    private double[] wheelAngle = new double[4];
 
-    public SRF_Swerve_Drive(double w, double t, double r) {
+    private SRF_Swerve_Module frontLeftModule;
+    private SRF_Swerve_Module frontRightModule;
+    private SRF_Swerve_Module rearLeftModule;
+    private SRF_Swerve_Module rearRightModule;
+
+    public SRF_Swerve_Drive(SRF_Swerve_Module frontLeft, SRF_Swerve_Module frontRight, SRF_Swerve_Module rearLeft,
+                            SRF_Swerve_Module rearRight, double w, double t, double r) {
+        frontLeftModule = frontLeft;
+        frontRightModule = frontRight;
+        rearLeftModule = rearLeft;
+        rearRightModule = rearRight;
         wheelBase = w;
         trackWidth = t;
         radius = r;
@@ -75,6 +87,44 @@ class SRF_Swerve_Drive {
         wheelAngle[1] = Math.atan2(B,D)*(180/Math.PI);
         wheelAngle[2] = Math.atan2(A,D)*(180/Math.PI);
         wheelAngle[3] = Math.atan2(A,C)*(180/Math.PI);
+
+        frontRightModule.set(wheelSpeed[0], wheelAngle[0]);
+        frontLeftModule.set(wheelSpeed[1], wheelAngle[1]);
+        rearLeftModule.set(wheelSpeed[2], wheelAngle[2]);
+        rearRightModule.set(wheelSpeed[3], wheelAngle[3]);
+    }
+
+    public void displaySmartDashboard(boolean showAngle, boolean showSpeed, boolean showRotEncoder, 
+                                      boolean showPIDTarget){
+        if(showAngle) {
+            //Angle in degrees
+            SmartDashboard.putNumber("Front Left Angle", getFrontLeftAngle());
+            SmartDashboard.putNumber("Front Right Angle", getFrontRightAngle());
+            SmartDashboard.putNumber("Rear Left Angle", getRearLeftAngle());
+            SmartDashboard.putNumber("Rear Right Angle",getRearRightAngle());
+        }
+        if(showSpeed) {
+            SmartDashboard.putNumber("Front Left Speed", getFrontLeftSpeed());
+            SmartDashboard.putNumber("Front Right Speed", getFrontRightSpeed());
+            SmartDashboard.putNumber("Rear Left Speed", getRearLeftSpeed());
+            SmartDashboard.putNumber("Rear Right Speed", getRearRightSpeed());
+        }
+        if(showRotEncoder) {
+            SmartDashboard.putNumber("Front Left Sensor", frontLeftModule.getSensorValue());
+            SmartDashboard.putNumber("Front Right Sensor", frontRightModule.getSensorValue());
+            SmartDashboard.putNumber("Rear Left Sensor", rearLeftModule.getSensorValue());
+            SmartDashboard.putNumber("Rear Right Sensor", rearRightModule.getSensorValue());
+        }
+        if(showPIDTarget) {
+            SmartDashboard.putNumber("Front Left PID Target", frontLeftModule.getPIDTarget());
+            SmartDashboard.putNumber("Front Right PID Target", frontRightModule.getPIDTarget());
+            SmartDashboard.putNumber("Rear Left PID Target", rearLeftModule.getPIDTarget());
+            SmartDashboard.putNumber("Rear Right PID Target", rearRightModule.getPIDTarget());
+        }
+    }
+
+    public double[] getWheelAngles(){
+        return new double[] {wheelAngle[0], wheelAngle[1], wheelAngle[2], wheelAngle[3]};
     }
 
     public double getFrontLeftSpeed(){
@@ -109,12 +159,3 @@ class SRF_Swerve_Drive {
         return wheelAngle[3];
     }
 }
-
-
-
-
-
-
-
-
-
