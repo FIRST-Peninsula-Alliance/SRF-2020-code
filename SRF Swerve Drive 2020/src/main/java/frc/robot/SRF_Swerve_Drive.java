@@ -51,7 +51,7 @@ class SRF_Swerve_Drive {
         Y = newCoordinates[1];
         calculate(X,Y,W);
     }
-
+    
     private void calculate(double X, double Y, double W){
         double A, B, C, D;
         double greatestValue = -1;
@@ -65,33 +65,35 @@ class SRF_Swerve_Drive {
         wheelSpeed[1] = Math.sqrt(Math.pow(B,2) + Math.pow(D,2));
         wheelSpeed[2] = Math.sqrt(Math.pow(A,2) + Math.pow(D,2));
         wheelSpeed[3] = Math.sqrt(Math.pow(A,2) + Math.pow(C,2));
-
-        /*
-        Finds the largest wheel speed greater then 1 and converts all speeds so they are proportional
-        to the largest being 1. It does this since the range of the motor is [-1,1].
-        Note: the values from the equation above for the wheel speed are only positive
-        */
-        for(int wheel = 0; wheel < 4; wheel++) {
-            if(wheelSpeed[0] > 1 && wheelSpeed[0] > greatestValue) {
-                greatestValue = wheelSpeed[0];
-            }
-        }
-        if(greatestValue > -1) {
+            
+        //if no controller input keep current angle(Math inside would change) but change speed to zero(Math above)
+        if(X != 0 || Y != 0 || W != 0) {
+            /*
+            Finds the largest wheel speed greater then 1 and converts all speeds so they are proportional
+            to the largest being 1. It does this since the range of the motor is [-1,1].
+            Note: the values from the equation above for the wheel speed are only positive
+            */
             for(int wheel = 0; wheel < 4; wheel++) {
-                wheelSpeed[0] = wheelSpeed[0]/greatestValue;
+                if(wheelSpeed[0] > 1 && wheelSpeed[0] > greatestValue) {
+                    greatestValue = wheelSpeed[0];
+                }
             }
+            if(greatestValue > -1) {
+                for(int wheel = 0; wheel < 4; wheel++) {
+                    wheelSpeed[0] = wheelSpeed[0]/greatestValue;
+                }
+            }
+
+            //gives angle of the wheels in degrees
+            wheelAngle[0] = Math.atan2(B,C)*(180/Math.PI);
+            wheelAngle[1] = Math.atan2(B,D)*(180/Math.PI);
+            wheelAngle[2] = Math.atan2(A,D)*(180/Math.PI);
+            wheelAngle[3] = Math.atan2(A,C)*(180/Math.PI);
         }
-
-        //gives angle of the wheels in degrees
-        wheelAngle[0] = Math.atan2(B,C)*(180/Math.PI);
-        wheelAngle[1] = Math.atan2(B,D)*(180/Math.PI);
-        wheelAngle[2] = Math.atan2(A,D)*(180/Math.PI);
-        wheelAngle[3] = Math.atan2(A,C)*(180/Math.PI);
-
-        frontRightModule.set(wheelSpeed[0], wheelAngle[0]);
-        frontLeftModule.set(wheelSpeed[1], wheelAngle[1]);
-        rearLeftModule.set(wheelSpeed[2], wheelAngle[2]);
-        rearRightModule.set(wheelSpeed[3], wheelAngle[3]);
+        frontRightModule.set(wheelAngle[0], wheelSpeed[0]);
+        frontLeftModule.set(wheelAngle[1], wheelSpeed[1]);
+        rearLeftModule.set(wheelAngle[2], wheelSpeed[2]);
+        rearRightModule.set(wheelAngle[3], wheelSpeed[3]);
     }
 
     public void displaySmartDashboard(boolean showAngle, boolean showSpeed, boolean showRotEncoder, 

@@ -51,7 +51,7 @@ public class Robot extends TimedRobot {
   Block pixyBlock;
   PixyCam pixy = new PixyCam();
 
-  double kP = 16, kI = 0.00013, kD = 0;
+  final double kP = 16, kI = 0.00013, kD = 0;
 
   //Joystick values for swerve drive
   double x, y, w;
@@ -85,10 +85,10 @@ public class Robot extends TimedRobot {
   }
  
   public void disabledPeriodic(){
-    /*SmartDashboard.putNumber("Front Left Sensor", frontLeftRot.getSelectedSensorPosition());
+    SmartDashboard.putNumber("Front Left Sensor", frontLeftRot.getSelectedSensorPosition());
     SmartDashboard.putNumber("Front Right Sensor", frontRightRot.getSelectedSensorPosition());
     SmartDashboard.putNumber("Rear Left Sensor", rearLeftRot.getSelectedSensorPosition());
-    SmartDashboard.putNumber("Rear Right Sensor", rearRightRot.getSelectedSensorPosition());*/
+    SmartDashboard.putNumber("Rear Right Sensor", rearRightRot.getSelectedSensorPosition());
   }
 
   @Override
@@ -110,14 +110,35 @@ public class Robot extends TimedRobot {
     y = controller.getRawAxis(1);
     w = controller.getRawAxis(2);
 
-    if(Math.abs(x) < .03)
+    if(Math.abs(x) < .05)
       x = 0.0;
-    if(Math.abs(y) < .03)
-      y = 0.0;
-    if(Math.abs(w) < .03)
-      w = 0.0;
+    else if(x > 0)
+      x = (x - .05)/.95;
+    else
+      x = (x + .05)/.95;
 
+    if(Math.abs(y) < .05)
+      y = 0.0;
+    else if(y > 0)
+      y = (y - .05)/.95;
+    else
+      y = (y + .05)/.95;
+    
+    if(Math.abs(w) < .05)
+      w = 0.0;
+    else if(w > 0)
+      w = (w - .05)/.95;
+    else
+      w = (w + .05)/.95;
+    
+    x *= Math.abs(x);
+    y *= Math.abs(y);
+    w *= Math.abs(w);
+    
     //if(x != 0 || y != 0 || w != 0) {
+      SmartDashboard.putNumber("X", x);
+      SmartDashboard.putNumber("Y", y);
+      SmartDashboard.putNumber("W", w);
       driveBase.set(x, y*-1, w);
       /*frontLeft.set(driveBase.getFrontLeftSpeed()/2);
       frontRight.set(driveBase.getFrontRightSpeed()/2);

@@ -7,6 +7,8 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 public class SRF_Swerve_Module {    
     TalonSRX rotationMotor;
     CANSparkMax speedMotor;
@@ -29,29 +31,44 @@ public class SRF_Swerve_Module {
     public void set(double angle, double speed) {
         int currentAngle = rotationMotor.getSelectedSensorPosition();
         double distanceBetween;
+        int sign = 1;
 
-        currentAngle = currentAngle % countsPerRev;
-        if(currentAngle < 0)
-            currentAngle = (countsPerRev + currentAngle);
-
+        currentAngle %= countsPerRev;
         if(angle < 0)
-            angle = (180 - angle*-1) + 180;
-        angle = (angle/360) * countsPerRev;
+            currentAngle += countsPerRev;
+        //SmartDashboard.putNumber("% counts/Rev", currentAngle);
 
-        distanceBetween = currentAngle - angle;
-
-        if(Math.abs(distanceBetween) > 512) {
-            if(distanceBetween > 0)
-                distanceBetween -= countsPerRev;
-            else
-                distanceBetween += countsPerRev;
-            speed *= -1;
+        angle = (angle/360)*1024;
+        if(angle < 0)
+            angle += countsPerRev;
+        //SmartDashboard.putNumber("Angle in Rev", angle);
+        
+        distanceBetween = angle - currentAngle;
+        if(distanceBetween < 0)
+            distanceBetween += countsPerRev;
+        //SmartDashboard.putNumber("Init DistBetween", distanceBetween);
+        
+        if(distanceBetween > (countsPerRev - distanceBetween)) {
+            distanceBetween = countsPerRev - distanceBetween;
+            sign *= -1;
         }
 
-        rotationMotor.set(ControlMode.Position, rotationMotor.getSelectedSensorPosition() + distanceBetween);
+
+        if(distanceBetween > 256) {
+            distanceBetween = 512 - distanceBetween;
+            sign *= -1;
+            speed *= -1;
+            //SmartDashboard.putNumber("distBetween Changed", distanceBetween);
+        }
+
+        if(Math.abs(distanceBetween) > 10)
+            rotationMotor.set(ControlMode.Position, rotationMotor.getSelectedSensorPosition() + distanceBetween * sign);
+        
+        
         speedMotor.set(speed);
 
-        PIDTarget = rotationMotor.getSelectedSensorPosition() + distanceBetween;
+        SmartDashboard.putNumber("Distance Between", distanceBetween);
+        PIDTarget = rotationMotor.getSelectedSensorPosition() - distanceBetween;
     }
 
     public double getPIDTarget() {
