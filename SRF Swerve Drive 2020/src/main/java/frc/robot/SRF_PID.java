@@ -33,6 +33,15 @@ public class SRF_PID { //v1.1.6
 		oldK[D][0] = kD;
 	}
 	
+	public SRF_PID(double kP, double kI, double kD) {
+		oldK[P][0] = kP;
+		oldK[I][0] = kI;
+		oldK[D][0] = kD;
+		k[P] = kP;
+		k[I] = kI;
+		k[D] = kD;
+	}
+
 	Joystick j;
 	
 	int P = 0, I = 1, D = 2; //symbolics which can be passed into any array in which gains are stored
@@ -43,6 +52,7 @@ public class SRF_PID { //v1.1.6
 	double max = 1, min = -1;
 	double lastTime = 0;
 	int inverser = 1; //Preset multiplied by this to switch between adding and subtracting
+    
 
 	double[] mult = new double[] {1,1,1};
 	

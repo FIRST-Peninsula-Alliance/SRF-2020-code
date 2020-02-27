@@ -29,12 +29,17 @@ class SRF_Swerve_Drive {
     Changes the X,Y, values inputed (Like from a controller joystick) so they are oriented 
     to forward being the opposite end of the field from you as opposed to the front of the robot
     */
-	private double[] convertToFieldPosition(double Y, double X, double gyroAngle){
+	private double[] convertToFieldPosition(double X, double Y, double gyroAngle){
         double newY, newX, temp;
+        
+        gyroAngle = (gyroAngle/180) * Math.PI;
+        SmartDashboard.putNumber("angle at Convert", gyroAngle);
 
         temp = Y*Math.cos(gyroAngle) + X*Math.sin(gyroAngle);
         newX = Y*-1*Math.sin(gyroAngle) + X*Math.cos(gyroAngle);
         newY = temp;
+        SmartDashboard.putNumber("newX", newX);
+        SmartDashboard.putNumber("newY", newY);
 
         return new double[] {newX,newY};
     }
@@ -46,7 +51,7 @@ class SRF_Swerve_Drive {
 
     //Does the same as above except changing the values to be field oriented
     public void set(double X, double Y, double W, double gyroAngle) {
-        double[] newCoordinates = convertToFieldPosition(X,Y,(gyroAngle/180)*Math.PI);
+        double[] newCoordinates = convertToFieldPosition(X,Y,gyroAngle);
         X = newCoordinates[0];
         Y = newCoordinates[1];
         calculate(X,Y,W);
@@ -61,7 +66,7 @@ class SRF_Swerve_Drive {
         C = Y - W*(trackWidth/radius);
         D = Y + W*(trackWidth/radius);
 
-        wheelSpeed[0] = Math.sqrt(Math.pow(B,2) + Math.pow(C,2));
+        wheelSpeed[0] = (Math.sqrt(Math.pow(B,2) + Math.pow(C,2)));
         wheelSpeed[1] = Math.sqrt(Math.pow(B,2) + Math.pow(D,2));
         wheelSpeed[2] = Math.sqrt(Math.pow(A,2) + Math.pow(D,2));
         wheelSpeed[3] = Math.sqrt(Math.pow(A,2) + Math.pow(C,2));
@@ -94,6 +99,13 @@ class SRF_Swerve_Drive {
         frontLeftModule.set(wheelAngle[1], wheelSpeed[1]);
         rearLeftModule.set(wheelAngle[2], wheelSpeed[2]);
         rearRightModule.set(wheelAngle[3], wheelSpeed[3]);
+    }
+
+    public void setSpeedZero(){
+        wheelSpeed[0] = 0;
+        wheelSpeed[1] = 0;
+        wheelSpeed[2] = 0;
+        wheelSpeed[3] = 0;
     }
 
     public void displaySmartDashboard(boolean showAngle, boolean showSpeed, boolean showRotEncoder, 
