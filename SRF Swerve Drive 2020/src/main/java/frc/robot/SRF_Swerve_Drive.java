@@ -33,13 +33,13 @@ class SRF_Swerve_Drive {
         double newY, newX, temp;
         
         gyroAngle = (gyroAngle/180) * Math.PI;
-        SmartDashboard.putNumber("angle at Convert", gyroAngle);
+        //SmartDashboard.putNumber("angle at Convert", gyroAngle);
 
         temp = Y*Math.cos(gyroAngle) + X*Math.sin(gyroAngle);
         newX = Y*-1*Math.sin(gyroAngle) + X*Math.cos(gyroAngle);
         newY = temp;
-        SmartDashboard.putNumber("newX", newX);
-        SmartDashboard.putNumber("newY", newY);
+        //SmartDashboard.putNumber("newX", newX);
+        //SmartDashboard.putNumber("newY", newY);
 
         return new double[] {newX,newY};
     }

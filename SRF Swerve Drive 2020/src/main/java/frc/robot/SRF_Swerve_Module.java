@@ -7,6 +7,7 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.ControlType;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -33,6 +34,7 @@ public class SRF_Swerve_Module {
         rotationMotor.config_kD(0, D);
         
         speedMotor = new CANSparkMax(sparkID, MotorType.kBrushless);
+        speedMotor.setIdleMode(IdleMode.kBrake);
         speedMotor.setSmartCurrentLimit(50);
         speedMotor.setOpenLoopRampRate(.35);
         speedPID = new CANPIDController(speedMotor);
@@ -82,7 +84,7 @@ public class SRF_Swerve_Module {
         
         speedPID.setReference(speed, ControlType.kDutyCycle);
 
-        SmartDashboard.putNumber("Distance Between", distanceBetween);
+        //SmartDashboard.putNumber("Distance Between", distanceBetween);
         PIDTarget = rotationMotor.getSelectedSensorPosition() - distanceBetween;
     }
 
